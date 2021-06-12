@@ -25,8 +25,8 @@ sudo apt-get update; \
 # official tutorial: https://docs.microsoft.com/de-de/dotnet/core/install/linux-ubuntu#2004-
 ```
 
-Now you can run the project creating some primes required to carry out
-the RSA algorithm properly.
+Now you can run the project to create some primes that are used to
+encrypt and decrypt a very simple message using the RSA algorithm.
 
 ```sh
 dotnet run
