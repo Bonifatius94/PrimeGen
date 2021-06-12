@@ -11,6 +11,9 @@ namespace PrimeGen
             // define the key length to be generated
             int keylen = 128;
 
+            Console.WriteLine($"Generating keys for RSA encryption (keylen={ keylen } bits):");
+            Console.WriteLine("====================================================");
+
             // generate prime numbers and use them for some RSA
             var p = KeyGenUtils.GeneratePrime(keylen);
             var q = KeyGenUtils.GeneratePrime(keylen);
@@ -29,6 +32,7 @@ namespace PrimeGen
                 d = computeMultInverse(phiN, e);
             } while (e >= phiN || e == 1 || d < 0);
             Console.WriteLine($"e={ e }\nd={ d }");
+            Console.WriteLine("====================================================");
 
             // create a message and encrypt it
             string message = "Hello World, RSA encryption!";
