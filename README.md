@@ -25,6 +25,13 @@ sudo apt-get update; \
 # official tutorial: https://docs.microsoft.com/de-de/dotnet/core/install/linux-ubuntu#2004-
 ```
 
+Download the source code by cloning this git repository.
+
+```sh
+git clone https://github.com/Bonifatius94/PrimeGen
+cd PrimeGen
+```
+
 Now you can run the project to create some primes that are used to
 encrypt and decrypt a very simple message using the RSA algorithm.
 
