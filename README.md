@@ -39,5 +39,23 @@ encrypt and decrypt a very simple message using the RSA algorithm.
 dotnet run
 ```
 
+When running you may be prompted an output like the following example:
+
+```text
+Generating keys for RSA encryption (keylen=128 bits):
+====================================================
+p=22641425880588529119780961947471613697
+q=64691136216422834958231258782814769181
+N=1464699565775193873901347581743378875189028505571442438354476348766653072157
+phi(N)=1464699565775193873901347581743378875101695943474431074276464128036366689280
+e=84873714534479592302170843865699775323
+d=716060456532699376833342290190195238176394542272471939021456502928274835667
+====================================================
+original message:  'Hello World, RSA encryption!'
+encrypted message: ';/<C;0???!
+                              ???? 0??;_??qr? ?'
+decrypted message: 'Hello World, RSA encryption!'
+```
+
 ## Licence
 This software is available under the terms of the MIT licence.
