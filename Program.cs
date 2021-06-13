@@ -32,19 +32,22 @@ namespace PrimeGen
         public static void Main(string[] args)
         {
             // define the RSA key length to be generated
-            int keylen = 128; // tested with keylen up to 512
+            int keylen = 1024; // tested with keylen up to 1024
             var rsaKeys = RsaUtils.GenerateKeypair(keylen);
 
-            // create a message and encrypt it using RSA
+            // create a message
             string message = "Hello World, RSA encryption!";
-            var plain = Encoding.ASCII.GetBytes(message);
-            var cipher = RsaUtils.Encrypt(plain, rsaKeys.PubKey, rsaKeys.Modul);
+            var encoding = Encoding.ASCII;
+            var plain = encoding.GetBytes(message);
             Console.WriteLine($"original message:  '{ message }'");
-            Console.WriteLine($"encrypted message: '{ Encoding.ASCII.GetString(cipher) }'");
+
+            // encrypt the message using RSA
+            var cipher = RsaUtils.Encrypt(plain, rsaKeys.PubKey, rsaKeys.Modul);
+            Console.WriteLine($"encrypted message: '{ encoding.GetString(cipher) }'");
 
             // decrypt the message back again using RSA
             var decrypted = RsaUtils.Decrypt(cipher, rsaKeys.PrivKey, rsaKeys.Modul);
-            message = Encoding.ASCII.GetString(decrypted);
+            message = encoding.GetString(decrypted);
             Console.WriteLine($"decrypted message: '{ message }'");
         }
     }

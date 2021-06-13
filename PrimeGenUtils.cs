@@ -45,29 +45,26 @@ namespace PrimeGen
         /// <returns>a prime number with prob. >= 1 - (1/2)^numChecks</returns>
         public static BigInteger GeneratePrime(int length, int numChecks=1000)
         {
-            BigInteger m;
+            BigInteger candidate;
             int passedChecks = 0;
 
             do
             {
-                // generate a random integer of the given length
-                m = randBigint(length, primeCandidate: true);
-
-                // make sure to avoid division by zero
-                if (m.IsZero) { continue; }
+                // generate a random prime candidate of the given length
+                candidate = randBigint(length, primeCandidate: true);
 
                 // perform a given number of primality checks
                 passedChecks = 0;
                 for (; passedChecks < numChecks; passedChecks++)
                 {
                     // check for primality (probably prime, Miller-Rabin)
-                    if (!isProbablyPrime(m, length)) { break; }
+                    if (!isProbablyPrime(candidate, length)) { break; }
                 }
             }
             // continue until a number passes all checks 
             while (passedChecks < numChecks);
 
-            return m;
+            return candidate;
         }
 
         public static bool isProbablyPrime(BigInteger m, int length)
