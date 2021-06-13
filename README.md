@@ -40,7 +40,7 @@ encrypt and decrypt a very simple message using the RSA algorithm.
 dotnet run
 
 # use an optimized binary (here: optimized for linux x64 systems)
- dotnet run --runtime linux-x64 --configuration Release
+dotnet run --runtime linux-x64 --configuration Release
 ```
 
 When running you may be prompted an output like the following example:
