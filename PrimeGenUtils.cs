@@ -132,7 +132,7 @@ namespace PrimeGen
             return value;
         }
 
-        private static int[] eratosthenesSieve(int bound)
+        private static IEnumerable<int> eratosthenesSieve(int bound)
         {
             // initialize the result set indicating whether the number at its index
             // is prime; every number is assumed to be prime (not not prime)
@@ -147,18 +147,22 @@ namespace PrimeGen
                 // otherwise, i is prime because it is not divisible by any smaller primes
                 else 
                 {
+                    yield return i;
+
                     // cross out all multiples of i within the search bound
                     var multiples = Enumerable.Range(2, (bound / i) - 2).Select(x => x * i);
                     foreach (var m in multiples) { notPrime[m] = true; }
                 }
             }
 
-            // convert the boolean field into an integer array
-            return Enumerable.Range(2, bound - 2).Where(x => !notPrime[x]).ToArray();
+            for (int i = (int)Math.Ceiling(Math.Sqrt(bound)); i < bound; i++)
+            {
+                if (!notPrime[i]) { yield return i; }
+            }
         }
 
         private static IEnumerable<long> partitionPrimeGroups(
-            int[] primes, long limit=long.MaxValue)
+            IEnumerable<int> primes, long limit=long.MaxValue)
         {
             BigInteger t = 1;
 
@@ -205,7 +209,7 @@ namespace PrimeGen
                     if (!gcd.IsOne) { candidate = candidate - 2; break; }
                 }
             }
-            // continue until all 3 checks pass, i.e. the value was not changed anymore
+            // continue until all checks pass, i.e. the value was not changed anymore
             while (temp != candidate);
 
             return candidate;
