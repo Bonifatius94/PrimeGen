@@ -137,9 +137,10 @@ namespace PrimeGen
             // initialize the result set indicating whether the number at its index
             // is prime; every number is assumed to be prime (not not prime)
             var notPrime = new bool[bound];
+            int checkBound = (int)Math.Sqrt(bound);
 
             // test all numbers i in { 2, ..., sqrt(bound) }
-            for (int i = 2; i <= (int)Math.Sqrt(bound); i++)
+            for (int i = 2; i <= checkBound; i++)
             {
                 // continue if i is already crossed out, i.e. i is composite
                 if (notPrime[i]) { continue; }
@@ -147,6 +148,7 @@ namespace PrimeGen
                 // otherwise, i is prime because it is not divisible by any smaller primes
                 else 
                 {
+                    // write i to the output stream
                     yield return i;
 
                     // cross out all multiples of i within the search bound
@@ -155,8 +157,10 @@ namespace PrimeGen
                 }
             }
 
-            for (int i = (int)Math.Ceiling(Math.Sqrt(bound)); i < bound; i++)
+            // process all remaining numbers within the search bound
+            for (int i = checkBound + 1; i < bound; i++)
             {
+                // write i to the output stream if it is a prime
                 if (!notPrime[i]) { yield return i; }
             }
         }
