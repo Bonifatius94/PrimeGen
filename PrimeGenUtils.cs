@@ -27,6 +27,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace PrimeGen
 {
@@ -48,10 +50,35 @@ namespace PrimeGen
         /// <param name="length">The length of the prime to be generated.</param>
         /// <param name="numChecks">The number of Miller-Rabin checks to verify the prime (default: 1000).</param>
         /// <returns>a prime number with prob. >= 1 - (1/2)^numChecks</returns>
-        public static BigInteger GeneratePrime(int length, int numChecks=1000)
+        public static BigInteger GeneratePrime(int length, 
+            int numChecks=1000, int? maxCores=null)
         {
-            // TODO: use multi-core programming
+            // determine the amount of CPU cores to be used in parallel
+            int cores = maxCores ?? Environment.ProcessorCount;
 
+            // prepare a cancellation token source to kill the threads gracefully
+            // after the first task successfully found a prime
+            var callback = new CancellationTokenSource();
+
+            // start all tasks searching for primes simultaneously
+            var tasks = Enumerable.Range(0, cores)
+                .Select(x => Task.Run(() => 
+                    generateSinglePrime(length, numChecks, callback.Token)))
+                .ToArray();
+
+            // wait until the first prime was found
+            int taskId = Task.WaitAny(tasks);
+            var prime = tasks[taskId].Result;
+
+            // make sure to kill all dangling tasks
+            callback.Cancel();
+
+            return prime;
+        }
+
+        private static BigInteger generateSinglePrime(
+            int length, int numChecks, CancellationToken token)
+        {
             BigInteger candidate;
             int passedChecks = 0;
 
@@ -67,13 +94,13 @@ namespace PrimeGen
                     if (!isProbablyPrime(candidate, length)) { break; }
                 }
             }
-            // continue until a number passes all checks 
-            while (passedChecks < numChecks);
+            // continue until a number passes all checks or the cancellation is requested
+            while (passedChecks < numChecks && !token.IsCancellationRequested);
 
             return candidate;
         }
 
-        public static bool isProbablyPrime(BigInteger m, int length)
+        private static bool isProbablyPrime(BigInteger m, int length)
         {
             // determine the least significant bit index k for m-1 = 2^k * u
             int k = naiveLsb(m - 1);
