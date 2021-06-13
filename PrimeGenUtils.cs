@@ -140,6 +140,9 @@ namespace PrimeGen
                     // make sure that the decimal representation does not end with 0 or 5
                     // ~> not divisible by 5 (info: parity check already handles 0 case)
                     value = value.ToString().Last() == '5' ? value + 2 : value;
+
+                    // TODO: add some more checks to facilitate hardening the candidate space
+                    //       -> test if this allows to improve the prime generator's performance
                 }
                 // continue until all 3 checks pass, i.e. the value was not changed anymore
                 while (lastValue != value);
