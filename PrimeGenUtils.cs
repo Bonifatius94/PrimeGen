@@ -54,8 +54,7 @@ namespace PrimeGen
                 candidate = randBigint(length, primeCandidate: true);
 
                 // perform a given number of primality checks
-                passedChecks = 0;
-                for (; passedChecks < numChecks; passedChecks++)
+                for (passedChecks = 0; passedChecks < numChecks; passedChecks++)
                 {
                     // check for primality (probably prime, Miller-Rabin)
                     if (!isProbablyPrime(candidate, length)) { break; }
@@ -119,8 +118,8 @@ namespace PrimeGen
             // make sure that the number is positive
             value = (value.Sign == -1) ? BigInteger.Negate(value) : value;
 
-            // only for prime candidates: make sure that the number is
-            // at least not divisible by 2 and 3 and 5
+            // only for prime candidates: make sure that the candidate is at least 
+            // not divisible by 2, 3 and 5 ~> ensure only trying promising candidates
             if (primeCandidate)
             {
                 BigInteger lastValue;
@@ -134,14 +133,13 @@ namespace PrimeGen
                     // make sure that the parity bit is set ~> not divisible by 2
                     value = value.IsEven ? value + 1 : value;
 
+                    // make sure that the checksum is not divisible by 3 ~> not divisible by 3
+                    int checksum = value.ToString().Select(x => x - '0').Sum();
+                    value = (checksum % 3 == 0) ? value + 2 : value;
+
                     // make sure that the decimal representation does not end with 0 or 5
                     // ~> not divisible by 5 (info: parity check already handles 0 case)
                     value = value.ToString().Last() == '5' ? value + 2 : value;
-
-                    // make sure that the checksum is not divisible by 3 ~> not divisible by 3
-                    string decimalStr = value.ToString();
-                    int checksum = decimalStr.Select(x => x - '0').Sum();
-                    value = (checksum % 3 == 0) ? value + 2 : value;
                 }
                 // continue until all 3 checks pass, i.e. the value was not changed anymore
                 while (lastValue != value);
