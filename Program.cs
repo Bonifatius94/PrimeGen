@@ -32,7 +32,7 @@ namespace PrimeGen
         public static void Main(string[] args)
         {
             // define the RSA key length to be generated
-            int keylen = 1024; // tested with keylen up to 1024
+            int keylen = 2048; // tested with keylen up to 1024
             var rsaKeys = RsaUtils.GenerateKeypair(keylen);
 
             // create a message
