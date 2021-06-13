@@ -36,7 +36,11 @@ Now you can run the project to create some primes that are used to
 encrypt and decrypt a very simple message using the RSA algorithm.
 
 ```sh
+# use a non-optimized binary, working on any system
 dotnet run
+
+# use an optimized binary (here: optimized for linux x64 systems)
+ dotnet run --runtime linux-x64 --configuration Release
 ```
 
 When running you may be prompted an output like the following example:
