@@ -84,7 +84,7 @@ namespace PrimeGen
             BigInteger y = 0;
             int i;
 
-            // perform the root test for x^(2^i) with i in { 0, k-1 }
+            // perform the root test for x^(2^i) with i in { 0, ..., k-1 }
             for (i = k-1; i >= 0; i--)
             {
                 y = x;
