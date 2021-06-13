@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 using System;
+using System.Linq;
 using System.Numerics;
 using System.Security.Cryptography;
 
@@ -50,7 +51,7 @@ namespace PrimeGen
             do
             {
                 // generate a random integer of the given length
-                m = randBigint(length);
+                m = randBigint(length, primeCandidate: true);
 
                 // make sure to avoid division by zero
                 if (m.IsZero) { continue; }
@@ -84,7 +85,7 @@ namespace PrimeGen
             BigInteger y = 0;
             int i;
 
-            // perform the root test for x^(2^i) with i in { 0, k-1 }
+            // perform the root test for x^(2^i) with i in { 0, ..., k-1 }
             for (i = k-1; i >= 0; i--)
             {
                 y = x;
@@ -108,9 +109,9 @@ namespace PrimeGen
             return k;
         }
 
-        private static BigInteger randBigint(int length)
+        private static BigInteger randBigint(int length, bool primeCandidate=false)
         {
-            // create random sequence of the given length
+            // create a random sequence of the given length
             int bytesCount = (int)Math.Ceiling(length / 8.0);
             var bytes = new byte[bytesCount];
             rngCsp.GetBytes(bytes);
@@ -120,6 +121,34 @@ namespace PrimeGen
 
             // make sure that the number is positive
             value = (value.Sign == -1) ? BigInteger.Negate(value) : value;
+
+            // only for prime candidates: make sure that the number is
+            // at least not divisible by 2 and 3 and 5
+            if (primeCandidate)
+            {
+                BigInteger lastValue;
+
+                do
+                {
+                    // snapshot the value before executing the next iteration
+                    // each iteration only changes the value if any of the checks fail
+                    lastValue = value;
+
+                    // make sure that the parity bit is set ~> not divisible by 2
+                    value = value.IsEven ? value + 1 : value;
+
+                    // make sure that the decimal representation does not end with 0 or 5
+                    // ~> not divisible by 5 (info: parity check already handles 0 case)
+                    value = value.ToString().Last() == '5' ? value + 2 : value;
+
+                    // make sure that the checksum is not divisible by 3 ~> not divisible by 3
+                    string decimalStr = value.ToString();
+                    int checksum = decimalStr.Select(x => x - '0').Sum();
+                    value = (checksum % 3 == 0) ? value + 2 : value;
+                }
+                // continue until all 3 checks pass, i.e. the value was not changed anymore
+                while (lastValue != value);
+            }
 
             return value;
         }
