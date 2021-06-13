@@ -61,5 +61,5 @@ encrypted message: ';/<C;0???!
 decrypted message: 'Hello World, RSA encryption!'
 ```
 
-## Licence
+## License
 This software is available under the terms of the MIT license.
