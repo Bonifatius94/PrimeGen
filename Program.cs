@@ -31,24 +31,32 @@ namespace PrimeGen
     {
         public static void Main(string[] args)
         {
-            // define the RSA key length to be generated
-            int keylen = 2048; // tested with keylen up to 1024
-            var rsaKeys = RsaUtils.GenerateKeypair(keylen);
+            // define the RSA key lengths to be tested
+            var keylens = new int[] { 128, 256, 512, 1024, 2048 };
 
-            // create a message
-            string message = "Hello World, RSA encryption!";
-            var encoding = Encoding.ASCII;
-            var plain = encoding.GetBytes(message);
-            Console.WriteLine($"original message:  '{ message }'");
+            // test each key length
+            foreach (int keylen in keylens)
+            {
+                var before = DateTime.UtcNow;
+                var rsaKeys = RsaUtils.GenerateKeypair(keylen);
+                var after = DateTime.UtcNow;
+                Console.WriteLine($"Generated RSA keys ({ keylen } bits), took { (after - before).TotalMilliseconds }ms");
 
-            // encrypt the message using RSA
-            var cipher = RsaUtils.Encrypt(plain, rsaKeys.PubKey, rsaKeys.Modul);
-            Console.WriteLine($"encrypted message: '{ encoding.GetString(cipher) }'");
+                // create a message
+                string message = "Hello World, RSA encryption!";
+                var encoding = Encoding.ASCII;
+                var plain = encoding.GetBytes(message);
+                Console.WriteLine($"original message:  '{ message }'");
 
-            // decrypt the message back again using RSA
-            var decrypted = RsaUtils.Decrypt(cipher, rsaKeys.PrivKey, rsaKeys.Modul);
-            message = encoding.GetString(decrypted);
-            Console.WriteLine($"decrypted message: '{ message }'");
+                // encrypt the message using RSA
+                var cipher = RsaUtils.Encrypt(plain, rsaKeys.PubKey, rsaKeys.Modul);
+                Console.WriteLine($"encrypted message: '{ encoding.GetString(cipher) }'");
+
+                // decrypt the message back again using RSA
+                var decrypted = RsaUtils.Decrypt(cipher, rsaKeys.PrivKey, rsaKeys.Modul);
+                message = encoding.GetString(decrypted);
+                Console.WriteLine($"decrypted message: '{ message }'");
+            }
         }
     }
 }

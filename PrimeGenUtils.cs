@@ -42,7 +42,7 @@ namespace PrimeGen
 
         // initialize cached groups of small primes used for prime candidate hardening
         private static long[] smallPrimeGroups = 
-            partitionPrimeGroups(eratosthenesSieve(10000)).ToArray();
+            partitionPrimeGroups(eratosthenesSieve(1000000)).ToArray();
 
         /// <summary>
         /// Create a prime number of the given length (as bits).
