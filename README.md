@@ -62,4 +62,4 @@ decrypted message: 'Hello World, RSA encryption!'
 ```
 
 ## Licence
-This software is available under the terms of the MIT licence.
+This software is available under the terms of the MIT license.
