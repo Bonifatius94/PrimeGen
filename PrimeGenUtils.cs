@@ -48,7 +48,7 @@ namespace PrimeGen
         /// Create a prime number of the given length (as bits).
         /// </summary>
         /// <param name="length">The length of the prime to be generated.</param>
-        /// <param name="numChecks">The number of Miller-Rabin checks to verify the prime (default: 30).</param>
+        /// <param name="numChecks">The number of Miller-Rabin checks to verify the prime (default: 25).</param>
         /// <param name="maxCores">The amout of CPU cores to be used (default: max. available).</param>
         /// <returns>a prime number with prob. >= 1 - (1/2)^numChecks</returns>
         public static BigInteger GeneratePrime(int length, 
