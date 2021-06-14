@@ -49,6 +49,7 @@ namespace PrimeGen
         /// </summary>
         /// <param name="length">The length of the prime to be generated.</param>
         /// <param name="numChecks">The number of Miller-Rabin checks to verify the prime (default: 1000).</param>
+        /// <param name="maxCores">The amout of CPU cores to be used (default: max. available).</param>
         /// <returns>a prime number with prob. >= 1 - (1/2)^numChecks</returns>
         public static BigInteger GeneratePrime(int length, 
             int numChecks=1000, int? maxCores=null)
@@ -62,8 +63,7 @@ namespace PrimeGen
 
             // start all tasks searching for primes simultaneously
             var tasks = Enumerable.Range(0, cores)
-                .Select(x => Task.Run(() => 
-                    generateSinglePrime(length, numChecks, callback.Token)))
+                .Select(x => Task.Run(() => generatePrime(length, numChecks, callback.Token)))
                 .ToArray();
 
             // wait until the first prime was found
@@ -76,7 +76,7 @@ namespace PrimeGen
             return prime;
         }
 
-        private static BigInteger generateSinglePrime(
+        private static BigInteger generatePrime(
             int length, int numChecks, CancellationToken token)
         {
             BigInteger candidate;
@@ -85,7 +85,11 @@ namespace PrimeGen
             do
             {
                 // generate a random prime candidate of the given length
-                candidate = randBigint(length, primeCandidate: true);
+                candidate = randBigint(length);
+
+                // make sure that the candidate is at least not divisible
+                // by small primes ~> try only promising candidates
+                candidate = hardenPrimeCandidate(candidate);
 
                 // perform a given number of primality checks
                 for (passedChecks = 0; passedChecks < numChecks; passedChecks++)
@@ -96,6 +100,36 @@ namespace PrimeGen
             }
             // continue until a number passes all checks or the cancellation is requested
             while (passedChecks < numChecks && !token.IsCancellationRequested);
+
+            return candidate;
+        }
+
+        private static BigInteger hardenPrimeCandidate(BigInteger candidate)
+        {
+            BigInteger temp;
+
+            // make sure the candidate is odd
+            candidate = candidate.IsEven ? candidate + 1 : candidate;
+
+            do
+            {
+                // snapshot the value before executing the next iteration
+                // each iteration only changes the value if any of the checks fail
+                temp = candidate;
+
+                // make sure the candidate is not divisible by small primes
+                // to do so, ensure that GCN(cand, p_1 * p_2 * ... * p_n) = 1
+                // which can be easily carried out in chunks of primes { p_i, ..., p_j }
+                foreach (long group in smallPrimeGroups)
+                {
+                    // make sure the primes group is rel. prime to the candidate
+                    // otherwise decrement the candidate by two and repeat all checks
+                    var gcd = BigInteger.GreatestCommonDivisor(candidate, group);
+                    if (!gcd.IsOne) { candidate = candidate - 2; break; }
+                }
+            }
+            // continue until all checks pass, i.e. the value was not changed anymore
+            while (temp != candidate);
 
             return candidate;
         }
@@ -139,7 +173,7 @@ namespace PrimeGen
             return k;
         }
 
-        private static BigInteger randBigint(int length, bool primeCandidate=false)
+        private static BigInteger randBigint(int length)
         {
             // create a random sequence of the given length
             int bytesCount = (int)Math.Ceiling(length / 8.0);
@@ -151,10 +185,6 @@ namespace PrimeGen
 
             // make sure that the number is positive
             value = (value.Sign == -1) ? BigInteger.Negate(value) : value;
-
-            // only for prime candidates: make sure that the candidate is at least 
-            // not divisible by small primes ~> ensure only trying promising candidates
-            value = primeCandidate ? hardenPrimeCandidate(value) : value;
 
             return value;
         }
@@ -172,16 +202,13 @@ namespace PrimeGen
                 // continue if i is already crossed out, i.e. i is composite
                 if (notPrime[i]) { continue; }
 
-                // otherwise, i is prime because it is not divisible by any smaller primes
-                else 
-                {
-                    // write i to the output stream
-                    yield return i;
+                // otherwise, i is prime because it is not divisible by any
+                // smaller primes ~> write i to the output stream
+                yield return i;
 
-                    // cross out all multiples of i within the search bound
-                    var multiples = Enumerable.Range(2, (bound / i) - 2).Select(x => x * i);
-                    foreach (var m in multiples) { notPrime[m] = true; }
-                }
+                // cross out all multiples of i within the search bound
+                var multiples = Enumerable.Range(2, (bound / i) - 2).Select(x => x * i);
+                foreach (var m in multiples) { notPrime[m] = true; }
             }
 
             // process all remaining numbers within the search bound
@@ -203,7 +230,7 @@ namespace PrimeGen
                 // if applying p to the prime group would exceed the limit
                 if (t * p > limit)
                 {
-                    // write the prime group to the output
+                    // write the prime group to the output stream
                     // p is the first member of the new prime group
                     yield return (long)t;
                     t = p;
@@ -212,38 +239,8 @@ namespace PrimeGen
                 else { t *= p; }
             }
 
-            // yield the remaining primes
+            // write the remaining primes to the output stream
             yield return (long)t;
-        }
-
-        private static BigInteger hardenPrimeCandidate(BigInteger candidate)
-        {
-            BigInteger temp;
-
-            // make sure the candidate is odd
-            candidate = candidate.IsEven ? candidate + 1 : candidate;
-
-            do
-            {
-                // snapshot the value before executing the next iteration
-                // each iteration only changes the value if any of the checks fail
-                temp = candidate;
-
-                // make sure the candidate is not divisible by small primes
-                // to do so, ensure that GCN(cand, p_1 * p_2 * ... * p_n) = 1
-                // which can be easily carried out in chunks of primes { p_i, ..., p_j }
-                foreach (long group in smallPrimeGroups)
-                {
-                    // make sure the primes group is rel. prime to the candidate
-                    // otherwise decrement the candidate by two and repeat all checks
-                    var gcd = BigInteger.GreatestCommonDivisor(candidate, group);
-                    if (!gcd.IsOne) { candidate = candidate - 2; break; }
-                }
-            }
-            // continue until all checks pass, i.e. the value was not changed anymore
-            while (temp != candidate);
-
-            return candidate;
         }
     }
 }
