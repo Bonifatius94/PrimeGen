@@ -42,17 +42,17 @@ namespace PrimeGen
 
         // initialize cached groups of small primes used for prime candidate hardening
         private static long[] smallPrimeGroups = 
-            partitionPrimeGroups(eratosthenesSieve(1000000)).ToArray();
+            partitionPrimeGroups(eratosthenesSieve(10000)).ToArray();
 
         /// <summary>
         /// Create a prime number of the given length (as bits).
         /// </summary>
         /// <param name="length">The length of the prime to be generated.</param>
-        /// <param name="numChecks">The number of Miller-Rabin checks to verify the prime (default: 1000).</param>
+        /// <param name="numChecks">The number of Miller-Rabin checks to verify the prime (default: 30).</param>
         /// <param name="maxCores">The amout of CPU cores to be used (default: max. available).</param>
         /// <returns>a prime number with prob. >= 1 - (1/2)^numChecks</returns>
         public static BigInteger GeneratePrime(int length, 
-            int numChecks=1000, int? maxCores=null)
+            int numChecks=25, int? maxCores=null)
         {
             // determine the amount of CPU cores to be used in parallel
             int cores = maxCores ?? Environment.ProcessorCount;

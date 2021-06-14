@@ -89,31 +89,34 @@ namespace PrimeGen
             Console.WriteLine($"Generating keys for RSA encryption (keylen={ keylen } bits):");
             Console.WriteLine("====================================================");
 
-            // generate prime numbers p, q with p != q
-            BigInteger p, q;
-            do {
-                p = PrimeGenUtils.GeneratePrime(keylen);
-                q = PrimeGenUtils.GeneratePrime(keylen);
-            } while (p == q);
-            Console.WriteLine($"p={ p }\nq={ q }");
+            // use always the same public key e
+            int e = 65537;
 
-            // compute N and phi(N) such that N = p * q and phi(N) = (p - 1) * (q - 1)
-            var N = p * q;
-            var phiN = (p - 1) * (q - 1);
-            Console.WriteLine($"N={ N }\nphi(N)={ phiN }");
+            // generate the private key d and the RSA modul N
+            BigInteger d, N;
+            do
+            {
+                // generate two primes with about half of the modul's keylen
+                var p = PrimeGenUtils.GeneratePrime(keylen / 2);
+                var q = PrimeGenUtils.GeneratePrime(keylen / 2);
+                if (p == q) { continue; }
+                Console.WriteLine($"p={ p }\nq={ q }");
 
-            // choose e such that it is rel. prime to phi(N) and within 1 < e < phi(N)
-            // then, determine d as mult. inverse of e, i.e. d * e = 1 (mod phi(N))
-            BigInteger d, e;
-            do {
-                e = PrimeGenUtils.GeneratePrime(keylen);
+                // compute N and phi(N) such that N = p * q and phi(N) = (p - 1) * (q - 1)
+                N = p * q;
+                var phiN = (p - 1) * (q - 1);
+                Console.WriteLine($"N={ N }\nphi(N)={ phiN }");
+
+                // determine d as mult. inverse of e, i.e. d * e = 1 (mod phi(N))
                 d = computeMultInverse(phiN, e);
-            } while (e >= phiN || e == 1 || d < 0);
-            Console.WriteLine($"e={ e }\nd={ d }");
-            Console.WriteLine("====================================================");
+                if (d < 0) { continue; }
+                Console.WriteLine($"e={ e }\nd={ d }");
+                Console.WriteLine("====================================================");
 
-            // return the generated RSA key pair
-            return new RsaKeypair() { PubKey = e, PrivKey = d, Modul = N };
+                // return the generated RSA key pair
+                return new RsaKeypair() { PubKey = e, PrivKey = d, Modul = N };
+
+            } while (true);
         }
 
         private static BigInteger computeMultInverse(BigInteger phiN, BigInteger e)
