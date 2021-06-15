@@ -137,12 +137,12 @@ namespace PrimeGen
         private static bool isProbablyPrime(BigInteger m, int length)
         {
             // Perform the Miller-Rabin primality test based on Fermat's little theorem 
-            // saying that m is probably prime if a^(m-1) = 1. Probably prime means that
+            // saying that m is probably prime if a^(m-1) = 1 (mod m). Probably prime means that
             // m is prime in at least 50% of cases by number theory. For efficiency, the
-            // Fermat test is carried out using the so-called root test.
+            // test is carried out using the so-called root test.
 
-            // For a randomly drawn witness a < m, the root test is based on following lemma:
-            // If a^(m-1) mod m = 1, then the sqrt(m-1) has to be 1 or -1 (with -1 = m-1 mod m).
+            // The root test is based on following lemma:
+            // If a^(m-1) mod m = 1, then the sqrt(m-1) has to be 1 or -1 (with -1 = m-1 (mod m)).
 
             // By interpreting m-1 as m-1 = u * 2^k, a^u can be squared exactly k times.
             // If any of those squares (a^u)^(2^i) for i in { 0, ..., k-1 } is equal to 1 or m-1,
@@ -169,7 +169,7 @@ namespace PrimeGen
                 if (x == 1) {return true; }
             }
 
-            // return composite if the root test fails
+            // return composite if the root test failed
             return false;
         }
 
