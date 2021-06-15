@@ -42,7 +42,7 @@ namespace PrimeGen
 
         // initialize cached groups of small primes used for prime candidate hardening
         private static long[] smallPrimeGroups = 
-            partitionPrimeGroups(eratosthenesSieve(10000)).ToArray();
+            partitionPrimeGroups(eratosthenesSieve(20000)).ToArray();
 
         /// <summary>
         /// Create a prime number of the given length (as bits).
@@ -108,7 +108,7 @@ namespace PrimeGen
         {
             BigInteger temp;
 
-            // make sure the candidate is odd
+            // make sure the candidate is odd (otherwise the loop won't terminate)
             candidate = candidate.IsEven ? candidate + 1 : candidate;
 
             do
@@ -119,16 +119,16 @@ namespace PrimeGen
 
                 // make sure the candidate is not divisible by small primes
                 // to do so, ensure that GCN(cand, p_1 * p_2 * ... * p_n) = 1
-                // which can be easily carried out in chunks of primes { p_i, ..., p_j }
-                foreach (long group in smallPrimeGroups)
+                // which can be easily carried out in groups of primes g = p_i * ... * p_j
+                foreach (long primeGroup in smallPrimeGroups)
                 {
-                    // make sure the primes group is rel. prime to the candidate
-                    // otherwise decrement the candidate by two and repeat all checks
-                    var gcd = BigInteger.GreatestCommonDivisor(candidate, group);
-                    if (!gcd.IsOne) { candidate = candidate - 2; break; }
+                    // make sure the prime group is rel. prime to the candidate
+                    // otherwise increment the candidate by two and repeat all checks
+                    var gcd = BigInteger.GreatestCommonDivisor(candidate, primeGroup);
+                    if (!gcd.IsOne) { candidate += 2; break; }
                 }
             }
-            // continue until all checks pass, i.e. the value was not changed anymore
+            // continue until the candidate is not divisible by any of the small primes
             while (temp != candidate);
 
             return candidate;
@@ -136,30 +136,41 @@ namespace PrimeGen
 
         private static bool isProbablyPrime(BigInteger m, int length)
         {
-            // determine the least significant bit index k for m-1 = 2^k * u
-            int k = naiveLsb(m - 1);
+            // Perform the Miller-Rabin primality test based on Fermat's little theorem 
+            // saying that m is probably prime if a^(m-1) = 1. Probably prime means that
+            // m is prime in at least 50% of cases by number theory. For efficiency, the
+            // Fermat test is carried out using the so-called root test.
 
-            // determine the remaining odd part u = (m-1) / 2^k
+            // For a randomly drawn witness a < m, the root test is based on following lemma:
+            // If a^(m-1) mod m = 1, then the sqrt(m-1) has to be 1 or -1 (with -1 = m-1 mod m).
+
+            // By interpreting m-1 as m-1 = u * 2^k, a^u can be squared exactly k times.
+            // If any of those squares (a^u)^(2^i) for i in { 0, ..., k-1 } is equal to 1 or m-1,
+            // then squaring it at least one more time results in a value of 1 (mod m).
+            // So by Fermat, a^(u * 2^k) = a^(m-1) = 1 (mod m) indicates that m is prob. prime.
+
+            // draw a random witness a = rand({ 0, ..., m-1 })
+            var a = randBigint(length) % m;
+
+            // determine the least significant bit index k for m-1 = 2^k * u
+            // and the remaining odd part u = (m-1) / 2^k
+            int k = naiveLsb(m - 1);
             var u = (m - 1) >> k;
 
-            // draw a random witness x = rand({ 0, ..., m-1 })^u mod m
-            var x = randBigint(length);
-            x = BigInteger.ModPow(x, u, m);
+            // apply the non-squarable exponent part u to a, i.e. x = a^u mod m
+            var x = BigInteger.ModPow(a, u, m);
 
-            BigInteger y = 0;
-            int i;
-
-            // perform the root test for x^(2^i) with i in { 0, ..., k-1 }
-            for (i = k-1; i >= 0; i--)
+            // square a^u (mod m) k times (the root test)
+            for (int i = 0; i < k; i++)
             {
-                y = x;
+                // compute the next square x = (a^u)^(2^i) 
+                // and return prob. prime if x = 1
                 x = BigInteger.ModPow(x, 2, m);
-                if (x == 1) { break; }
+                if (x == 1) {return true; }
             }
 
-            // evaluate the result of the root test
-            bool isProbPrime = (y == 1 || y == (m - 1)) && i >= 0;
-            return isProbPrime;
+            // return composite if the root test fails
+            return false;
         }
 
         private static int naiveLsb(BigInteger value)
@@ -176,9 +187,10 @@ namespace PrimeGen
         private static BigInteger randBigint(int length)
         {
             // create a random sequence of the given length
-            int bytesCount = (int)Math.Ceiling(length / 8.0);
+            int bytesCount = (int)Math.Ceiling((length + 1) / 8.0);
             var bytes = new byte[bytesCount];
             rngCsp.GetBytes(bytes);
+            bytes[bytesCount - 1] = 0x0;
 
             // convert the sequence to a BigInt
             var value = new BigInteger(bytes);
@@ -199,7 +211,7 @@ namespace PrimeGen
             // test all numbers i in { 2, ..., sqrt(bound) }
             for (int i = 2; i <= checkBound; i++)
             {
-                // continue if i is already crossed out, i.e. i is composite
+                // skip i if it is already crossed out, i.e. i is composite
                 if (notPrime[i]) { continue; }
 
                 // otherwise, i is prime because it is not divisible by any
@@ -207,14 +219,13 @@ namespace PrimeGen
                 yield return i;
 
                 // cross out all multiples of i within the search bound
-                var multiples = Enumerable.Range(2, (bound / i) - 2).Select(x => x * i);
-                foreach (var m in multiples) { notPrime[m] = true; }
+                for (int m = i + i; m < bound; m += 2) { notPrime[m] = true; }
             }
 
-            // process all remaining numbers within the search bound
+            // process all remaining numbers greater than the check bound
             for (int i = checkBound + 1; i < bound; i++)
             {
-                // write i to the output stream if it is a prime
+                // if i is a prime ~> write i to the output stream 
                 if (!notPrime[i]) { yield return i; }
             }
         }

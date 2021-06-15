@@ -89,14 +89,14 @@ namespace PrimeGen
             Console.WriteLine($"Generating keys for RSA encryption (keylen={ keylen } bits):");
             Console.WriteLine("====================================================");
 
-            // use always the same public key e
+            // use always the same public key e (e.g. for SSL certificates)
             int e = 65537;
 
             // generate the private key d and the RSA modul N
             BigInteger d, N;
             do
             {
-                // generate two primes with about half of the modul's keylen
+                // generate two primes with about half of the modul's key length
                 var p = PrimeGenUtils.GeneratePrime(keylen / 2);
                 var q = PrimeGenUtils.GeneratePrime(keylen / 2);
                 if (p == q) { continue; }
@@ -121,7 +121,12 @@ namespace PrimeGen
 
         private static BigInteger computeMultInverse(BigInteger phiN, BigInteger e)
         {
-            // algorithm source: Dirk Hachenberger - 'Mathematik für Informatiker', ISBN 3827373204
+            // Perform the extended Euclidean algorithm for a = phi(N) and b = e.
+            // By the simple Euclidean algorithm, the final value of a is the greatest
+            // common multiple of phi(N) and e. Moreover, the extended part of the algorithm
+            // provides an additional Bêzout identity GCN(phi(N), e) = u * phi(N) + v * e.
+            // As d is supposed to be the mult. inverse of e, i.e. d * e = 1 (mod phi(N)),
+            // u * phi(N) (mod phi(N)) = 0 and v * e = GCN(a, b) (mod phi(N)), so v = d.
 
             // initialize a and b
             var a = phiN;
@@ -152,9 +157,7 @@ namespace PrimeGen
                 s = sNew; t = tNew;
             }
 
-            // determine d such that d * e (mod phi(N)) = 1:
-            // by ext. euclid: GCN(e, phi(N)) = u * phi(N) + v * e
-            //                 ~> d = v if GCN(e, phi(N)) = a = 1
+            // only return v = d if the GCN(phi(N), e) = 1 and d > 0
             return a.IsOne ? v : -1;
         }
     }

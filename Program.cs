@@ -55,7 +55,7 @@ namespace PrimeGen
                 // decrypt the message back again using RSA
                 var decrypted = RsaUtils.Decrypt(cipher, rsaKeys.PrivKey, rsaKeys.Modul);
                 message = encoding.GetString(decrypted);
-                Console.WriteLine($"decrypted message: '{ message }'");
+                Console.WriteLine($"decrypted message: '{ message }'\n");
             }
         }
     }
