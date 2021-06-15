@@ -219,7 +219,7 @@ namespace PrimeGen
                 yield return i;
 
                 // cross out all multiples of i within the search bound
-                for (int m = i + i; m < bound; m += 2) { notPrime[m] = true; }
+                for (int m = i + i; m < bound; m += i) { notPrime[m] = true; }
             }
 
             // process all remaining numbers greater than the check bound
