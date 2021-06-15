@@ -166,7 +166,7 @@ namespace PrimeGen
                 // compute the next square x = (a^u)^(2^i) 
                 // and return prob. prime if x = 1
                 x = BigInteger.ModPow(x, 2, m);
-                if (x == 1) {return true; }
+                if (x == 1) { return true; }
             }
 
             // return composite if the root test failed
