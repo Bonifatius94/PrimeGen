@@ -158,15 +158,18 @@ namespace PrimeGen
             var u = (m - 1) >> k;
 
             // apply the non-squarable exponent part u to a, i.e. x = a^u mod m
-            var x = BigInteger.ModPow(a, u, m);
+            BigInteger x, y;
+            x = BigInteger.ModPow(a, u, m);
 
             // square a^u (mod m) k times (the root test)
             for (int i = 0; i < k; i++)
             {
-                // compute the next square x = (a^u)^(2^i) 
-                // and return prob. prime if x = 1
+                // compute the next square x = (a^u)^(2^i)
+                y = x;
                 x = BigInteger.ModPow(x, 2, m);
-                if (x == 1) { return true; }
+
+                // return prob. prime if y^2 = x, with y in { -1, 1 }
+                if (x == 1) { return (y == 1 || y == m - 1); }
             }
 
             // return composite if the root test failed
@@ -190,7 +193,8 @@ namespace PrimeGen
             int bytesCount = (int)Math.Ceiling((length + 1) / 8.0);
             var bytes = new byte[bytesCount];
             rngCsp.GetBytes(bytes);
-            bytes[bytesCount - 1] = 0x0;
+            bytes[bytesCount - 1] = 0x00;
+            bytes[bytesCount - 2] = 0x80;
 
             // convert the sequence to a BigInt
             var value = new BigInteger(bytes);
