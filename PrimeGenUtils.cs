@@ -40,9 +40,8 @@ namespace PrimeGen
         // initialize a strong cryptographic number generator
         private static RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider();
 
-        // initialize cached groups of small primes used for prime candidate hardening
-        private static long[] smallPrimeGroups = 
-            partitionPrimeGroups(eratosthenesSieve(10000)).ToArray();
+        // initialize cached small primes used for prime candidate hardening
+        private static int[] smallPrimes = eratosthenesSieve(10000).ToArray();
 
         /// <summary>
         /// Create a prime number of the given length (as bits).
@@ -117,15 +116,10 @@ namespace PrimeGen
                 // each iteration only changes the value if any of the checks fail
                 temp = candidate;
 
-                // make sure the candidate is not divisible by small primes
-                // to do so, ensure that GCN(cand, p_1 * p_2 * ... * p_n) = 1
-                // which can be easily carried out in groups of primes g = p_i * ... * p_j
-                foreach (long primeGroup in smallPrimeGroups)
+                // // make sure the candidate is not divisible by small primes
+                foreach (int prime in smallPrimes)
                 {
-                    // make sure the prime group is rel. prime to the candidate
-                    // otherwise increment the candidate by two and repeat all checks
-                    var gcd = BigInteger.GreatestCommonDivisor(candidate, primeGroup);
-                    if (!gcd.IsOne) { candidate += 2; break; }
+                    if (candidate % prime == 0) { candidate += 2; break; }
                 }
             }
             // continue until the candidate is not divisible by any of the small primes
@@ -154,8 +148,9 @@ namespace PrimeGen
 
             // determine the least significant bit index k for m-1 = 2^k * u
             // and the remaining odd part u = (m-1) / 2^k
-            int k = naiveLsb(m - 1);
-            var u = (m - 1) >> k;
+            int k = 0;
+            var u = m - 1;
+            while (u.IsEven) { u >>= 1; k++; }
 
             // apply the non-squarable exponent part u to a, i.e. x = a^u mod m
             BigInteger x, y;
@@ -176,17 +171,6 @@ namespace PrimeGen
             return false;
         }
 
-        private static int naiveLsb(BigInteger value)
-        {
-            // make sure that any bit is set
-            if (value == 0) { return -1; }
-
-            // shift bit-by-bit until the first set bit was found
-            int k = 0;
-            while (value.IsEven) { value >>= 1; k++; }
-            return k;
-        }
-
         private static BigInteger randBigint(int length)
         {
             // create a random sequence of the given length
@@ -194,7 +178,7 @@ namespace PrimeGen
             var bytes = new byte[bytesCount];
             rngCsp.GetBytes(bytes);
             bytes[bytesCount - 1] = 0x00;
-            bytes[bytesCount - 2] = 0x80;
+            bytes[bytesCount - 2] |= 0x80;
 
             // convert the sequence to a BigInt
             var value = new BigInteger(bytes);
@@ -232,30 +216,6 @@ namespace PrimeGen
                 // if i is a prime ~> write i to the output stream 
                 if (!notPrime[i]) { yield return i; }
             }
-        }
-
-        private static IEnumerable<long> partitionPrimeGroups(
-            IEnumerable<int> primes, long limit=long.MaxValue)
-        {
-            BigInteger t = 1;
-
-            // loop through all cached small primes
-            foreach (int p in primes)
-            {
-                // if applying p to the prime group would exceed the limit
-                if (t * p > limit)
-                {
-                    // write the prime group to the output stream
-                    // p is the first member of the new prime group
-                    yield return (long)t;
-                    t = p;
-                }
-                // otherwise apply p to the current prime group
-                else { t *= p; }
-            }
-
-            // write the remaining primes to the output stream
-            yield return (long)t;
         }
     }
 }
