@@ -41,7 +41,7 @@ namespace PrimeGen
         private static RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider();
 
         // initialize cached small primes used for prime candidate hardening
-        private static int[] smallPrimes = eratosthenesSieve(10000).ToArray();
+        private static int[] smallPrimes = eratosthenesSieve(100000).ToArray();
 
         /// <summary>
         /// Create a prime number of the given length (as bits).
