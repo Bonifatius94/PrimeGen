@@ -157,7 +157,7 @@ namespace PrimeGen
                 s = sNew; t = tNew;
             }
 
-            // only return v = d if the GCN(phi(N), e) = 1 and d > 0
+            // only return v = d if the GCD(phi(N), e) = 1 and d > 0
             return a.IsOne ? v : -1;
         }
     }
