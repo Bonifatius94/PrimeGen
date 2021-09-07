@@ -123,10 +123,10 @@ namespace PrimeGen
         {
             // Perform the extended Euclidean algorithm for a = phi(N) and b = e.
             // By the simple Euclidean algorithm, the final value of a is the greatest
-            // common multiple of phi(N) and e. Moreover, the extended part of the algorithm
-            // provides an additional Bêzout identity GCN(phi(N), e) = u * phi(N) + v * e.
+            // common divisor of phi(N) and e. Moreover, the extended part of the algorithm
+            // provides an additional Bêzout identity GCD(phi(N), e) = u * phi(N) + v * e.
             // As d is supposed to be the mult. inverse of e, i.e. d * e = 1 (mod phi(N)),
-            // u * phi(N) (mod phi(N)) = 0 and v * e = GCN(a, b) (mod phi(N)), so v = d.
+            // u * phi(N) (mod phi(N)) = 0 and v * e = GCD(a, b) (mod phi(N)), so v = d.
 
             // initialize a and b
             var a = phiN;
