@@ -132,8 +132,8 @@ namespace PrimeGen
         {
             // Perform the Miller-Rabin primality test based on Fermat's little theorem 
             // saying that m is probably prime if a^(m-1) = 1 (mod m). Probably prime means that
-            // m is prime in at least 50% of cases by number theory. For efficiency, the
-            // test is carried out using the so-called root test.
+            // m is prime in at least 50% of cases by number theory. For efficiency, the test is
+            // carried out using the so-called root test.
 
             // The root test is based on following lemma:
             // If a^(m-1) mod m = 1, then the sqrt(m-1) has to be 1 or -1 (with -1 = m-1 (mod m)).
@@ -142,6 +142,12 @@ namespace PrimeGen
             // If any of those squares (a^u)^(2^i) for i in { 0, ..., k-1 } is equal to 1 or m-1,
             // then squaring it at least one more time results in a value of 1 (mod m).
             // So by Fermat, a^(u * 2^k) = a^(m-1) = 1 (mod m) indicates that m is prob. prime.
+
+            // But only using Fermat's theorem would actually let too many non-primes pass the test.
+            // That is because there is also the possibility of testing a pseudo-prime mapping to
+            // the 1 (mod m) identity without squaring a 1 or -1 identity. Gladly there are at least
+            // as many true witnesses as non-witnesses to identify such pseudo-primes by additionally
+            // ensuring the root test's assumption, leading to a prob. of >=50% for a rejection.
 
             // draw a random witness a = rand({ 0, ..., m-1 })
             var a = randBigint(length) % m;
